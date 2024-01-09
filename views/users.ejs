@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>User List</title>
+</head>
+<body>
+
+  <div style="float: right;"> Welcome back <%= username %> <button class="signout">Sign Out</button></div>
+  <h1>Ajax Method</h1>
+    <h2>Add New User</h2>
+    <form id="addUserForm">
+      <label for="username">Username:</label>
+      <input type="text" id="username" name="username" required><br><br>
+      <label for="password">Password:</label>
+      <input type="password" id="password" name="password" required><br><br>
+      <input type="submit" value="Add User">
+    </form>
+    <br>
+    <br>
+    <br>
+
+  <h1>User List</h1>
+  <!--create me a table to insert in the database using node js-->
+    <table border="1">
+        <thead>
+        <tr> 
+            <th>ID</th>
+            <th>Username</th>
+            <th>Password</th>
+            <th>Action</th>
+        </tr>
+        </thead>
+        <tbody>
+        <% users.forEach(function(user){ %>
+            <tr>
+                <td><%= user.ID %></td>
+            <td><%= user.username %></td>
+            <td><%= user.password %></td>
+            <td>
+                <button class="delete" data-id="<%= user.ID %>">Delete</button>
+            </td>
+            </tr>
+        <% }); %>
+        </tbody>
+    </table>
+
+
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <script>
+    $(document).ready(function(){
+
+// Function to handle the deletion of users
+function deleteUser(ID) {
+   $.ajax({
+     type: 'POST',
+     url: '/api/delete',
+     data: {ID: ID},
+     success: function(response,status){
+       window.location.href = '/users';
+     },
+     error: function(error){
+       console.error('Error deleting user:', error);
+     }
+   });
+}
+
+// Make API to add user
+$('#addUserForm').submit(function(e){
+   e.preventDefault(); 
+
+   var formData = {
+     username: $('#username').val(),
+     password: $('#password').val()
+   };
+
+   $.ajax({
+     type: 'POST',
+     url: '/api/adduser',
+     data: formData,
+     success: function(response, status) {
+       if (response.success) {
+         $("tbody").append(`
+             <tr>
+                <td>${response.user.ID}</td>
+                <td>${response.user.username}</td>
+                <td>${response.user.password}</td>
+                <td><button class="delete" data-id="${response.user.ID}">Delete</button></td>
+             </tr>
+         `);
+         // Attach the click event handler to the delete button
+         $(document).on('click', '.delete', function(e){
+           e.preventDefault(); 
+           deleteUser($(this).data('id'));
+         });
+       } else {
+         console.error('Error adding user:', response.error);
+       }
+     },
+     error: function(error) {
+       console.error('Error adding user:', error);
+     }
+   });
+});
+//make api to signout
+$('.signout').click(function(e){
+   e.preventDefault(); 
+   $.ajax({
+     type: 'POST',
+     url: '/api/signout',
+     success: function(response,status){
+       window.location.href = '/';
+     },
+     error: function(error){
+       console.error('Error signing out:', error);
+     }
+   });
+});
+//make api for delete
+$('.delete').click(function(e){
+   e.preventDefault(); 
+   deleteUser($(this).data('id'));
+});
+
+});
+  </script>
+<br>
+<br>
+<br>
+
+</body>
+</html>
